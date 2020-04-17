@@ -132,6 +132,7 @@ function convertTransactions(txns) {
       memo: getTransactionMemo(txn),
       installments: getInstallmentsInfo(txn),
       status: TRANSACTION_STATUS.COMPLETED,
+      raw: txn,
     };
   });
 }
