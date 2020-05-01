@@ -19,7 +19,7 @@ export interface VisaCalRawTransaction {
   TransExecutionWay: number;
 }
 
-namespace VisaCalRawTransaction {
+export declare namespace VisaCalRawTransaction {
   export interface Amount {
     Value: number;
     Symbol: string;
