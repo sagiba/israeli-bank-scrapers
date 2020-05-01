@@ -11,7 +11,10 @@ import {
 } from '../constants';
 import { fetchGet, fetchPost } from '../helpers/fetch';
 import { fixInstallments, sortTransactionsByDate, filterOldTransactions } from '../helpers/transactions';
-import { ErrorTypes, TransactionStatuses, TransactionTypes } from '../types';
+import {
+  ErrorTypes, Transaction, TransactionStatuses, TransactionTypes,
+} from '../types';
+import { VisaCalRawTransaction } from './visa-cal.types';
 
 const BASE_URL = 'https://cal4u.cal-online.co.il/Cal4U';
 const AUTH_URL = 'https://connect.cal-online.co.il/api/authentication/login';
@@ -116,7 +119,7 @@ function getTransactionMemo(txn) {
   }
 }
 
-function convertTransactions(txns) {
+function convertTransactions(txns: Array<VisaCalRawTransaction>): Array<Transaction> {
   return txns.map((txn) => {
     return {
       type: convertTransactionType(txn.TransType),
@@ -133,8 +136,8 @@ function convertTransactions(txns) {
   });
 }
 
-function prepareTransactions(txns, startMoment, combineInstallments) {
-  let clonedTxns = Array.from(txns);
+function prepareTransactions(txns, startMoment, combineInstallments): Array<Transaction> {
+  let clonedTxns: Array<Transaction> = Array.from(txns);
   if (!combineInstallments) {
     clonedTxns = fixInstallments(clonedTxns);
   }
@@ -153,7 +156,7 @@ async function getTransactionsNextPage(authHeader) {
   return fetchGet(hasNextPageUrl, authHeader);
 }
 
-async function fetchTxns(authHeader, cardId, debitDates) {
+async function fetchTxns(authHeader, cardId, debitDates): Promise<Array<VisaCalRawTransaction>> {
   const txns = [];
   for (const date of debitDates) {
     const fetchTxnUrl = getTransactionsUrl(cardId, date);
