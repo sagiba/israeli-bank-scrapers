@@ -3,38 +3,17 @@ import buildUrl from 'build-url';
 import moment from 'moment';
 
 import { BaseScraper, ScrapeProgressTypes } from './base-scraper';
-import {
-  SHEKEL_CURRENCY_SYMBOL,
-  SHEKEL_CURRENCY,
-  DOLLAR_CURRENCY_SYMBOL,
-  DOLLAR_CURRENCY,
-} from '../constants';
 import { fetchGet, fetchPost } from '../helpers/fetch';
-import { fixInstallments, sortTransactionsByDate, filterOldTransactions } from '../helpers/transactions';
-import {
-  ErrorTypes, Transaction, TransactionStatuses, TransactionTypes,
-} from '../types';
+import { ErrorTypes } from '../types';
 import { VisaCalRawTransaction } from './visa-cal.types';
+import VisaCalTransactionConverter from './visa-cal.converter';
 
 const BASE_URL = 'https://cal4u.cal-online.co.il/Cal4U';
 const AUTH_URL = 'https://connect.cal-online.co.il/api/authentication/login';
-const DATE_FORMAT = 'DD/MM/YYYY';
 
 const PASSWORD_EXPIRED_MSG = 'תוקף הסיסמא פג';
 const INVALID_CREDENTIALS = 'שם המשתמש או הסיסמה שהוזנו שגויים';
 const NO_DATA_FOUND_MSG = 'לא נמצאו חיובים לטווח תאריכים זה';
-
-const NORMAL_TYPE_CODE = '5';
-const REFUND_TYPE_CODE = '6';
-const WITHDRAWAL_TYPE_CODE = '7';
-const INSTALLMENTS_TYPE_CODE = '8';
-const CANCEL_TYPE_CODE = '25';
-const WITHDRAWAL_TYPE_CODE_2 = '27';
-const CREDIT_PAYMENTS_CODE = '59';
-const MEMBERSHIP_FEE_TYPE_CODE = '67';
-const SERVICES_REFUND_TYPE_CODE = '71';
-const SERVICES_TYPE_CODE = '72';
-const REFUND_TYPE_CODE_2 = '76';
 
 const HEADER_SITE = { 'X-Site-Id': '8D37DF16-5812-4ACD-BAE7-CD1A5BFA2206' };
 
@@ -63,87 +42,6 @@ function getTransactionsUrl(cardId, debitDate) {
       FromDate: debitDate,
     },
   });
-}
-
-function convertTransactionType(txnType) {
-  switch (txnType) {
-    case NORMAL_TYPE_CODE:
-    case REFUND_TYPE_CODE:
-    case CANCEL_TYPE_CODE:
-    case WITHDRAWAL_TYPE_CODE:
-    case WITHDRAWAL_TYPE_CODE_2:
-    case REFUND_TYPE_CODE_2:
-    case SERVICES_REFUND_TYPE_CODE:
-    case MEMBERSHIP_FEE_TYPE_CODE:
-    case SERVICES_TYPE_CODE:
-      return TransactionTypes.Normal;
-    case INSTALLMENTS_TYPE_CODE:
-    case CREDIT_PAYMENTS_CODE:
-      return TransactionTypes.Installments;
-    default:
-      throw new Error(`unknown transaction type ${txnType}`);
-  }
-}
-
-function convertCurrency(currency) {
-  switch (currency) {
-    case SHEKEL_CURRENCY_SYMBOL:
-      return SHEKEL_CURRENCY;
-    case DOLLAR_CURRENCY_SYMBOL:
-      return DOLLAR_CURRENCY;
-    default:
-      return currency;
-  }
-}
-
-function getInstallmentsInfo(txn) {
-  if (!txn.CurrentPayment || txn.CurrentPayment === '0') {
-    return null;
-  }
-
-  return {
-    number: parseInt(txn.CurrentPayment, 10),
-    total: parseInt(txn.TotalPayments, 10),
-  };
-}
-
-function getTransactionMemo(txn) {
-  const { TransType: txnType, TransTypeDesc: txnTypeDescription } = txn;
-  switch (txnType) {
-    case NORMAL_TYPE_CODE:
-      return txnTypeDescription === 'רכישה רגילה' ? '' : txnTypeDescription;
-    case INSTALLMENTS_TYPE_CODE:
-      return `תשלום ${txn.CurrentPayment} מתוך ${txn.TotalPayments}`;
-    default:
-      return txn.TransTypeDesc;
-  }
-}
-
-function convertTransactions(txns: Array<VisaCalRawTransaction>): Array<Transaction> {
-  return txns.map((txn) => {
-    return {
-      type: convertTransactionType(txn.TransType),
-      date: moment(txn.Date, DATE_FORMAT).toISOString(),
-      processedDate: moment(txn.DebitDate, DATE_FORMAT).toISOString(),
-      originalAmount: -txn.Amount.Value,
-      originalCurrency: convertCurrency(txn.Amount.Symbol),
-      chargedAmount: -txn.DebitAmount.Value,
-      description: txn.MerchantDetails.Name,
-      memo: getTransactionMemo(txn),
-      installments: getInstallmentsInfo(txn),
-      status: TransactionStatuses.Completed,
-    };
-  });
-}
-
-function prepareTransactions(txns, startMoment, combineInstallments): Array<Transaction> {
-  let clonedTxns: Array<Transaction> = Array.from(txns);
-  if (!combineInstallments) {
-    clonedTxns = fixInstallments(clonedTxns);
-  }
-  clonedTxns = sortTransactionsByDate(clonedTxns);
-  clonedTxns = filterOldTransactions(clonedTxns, startMoment, combineInstallments);
-  return clonedTxns;
 }
 
 async function getBankDebits(authHeader, accountId) {
@@ -187,6 +85,7 @@ async function getTxnsOfCard(authHeader, card, bankDebits) {
 async function getTransactionsForAllAccounts(authHeader, startMoment, options) {
   const cardsByAccountUrl = `${BASE_URL}/CardsByAccounts`;
   const banksResponse = await fetchGet(cardsByAccountUrl, authHeader);
+  const txnConverter = new VisaCalTransactionConverter();
 
   if (_.get(banksResponse, 'Response.Status.Succeeded')) {
     const accounts = [];
@@ -199,8 +98,12 @@ async function getTransactionsForAllAccounts(authHeader, startMoment, options) {
           for (let j = 0; j < bank.Cards.length; j += 1) {
             const rawTxns = await getTxnsOfCard(authHeader, bank.Cards[j], bankDebits.Debits);
             if (rawTxns) {
-              let txns = convertTransactions(rawTxns);
-              txns = prepareTransactions(txns, startMoment, options.combineInstallments);
+              let txns = txnConverter.convertTransactions(rawTxns);
+              txns = txnConverter.prepareTransactions(
+                txns,
+                startMoment,
+                options.combineInstallments,
+              );
               const result = {
                 accountNumber: bank.Cards[j].LastFourDigits,
                 txns,

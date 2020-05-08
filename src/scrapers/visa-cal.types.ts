@@ -38,3 +38,18 @@ export declare namespace VisaCalRawTransaction {
     FaxNumber: string;
   }
 }
+
+// This cannot be inside the namespace, because the namespace is declare-only
+export enum VisaCalRawTransactionTransType {
+  Normal = 5,
+  Refund = 6,
+  Withdrawal,
+  Installments,
+  Cancel = 25,
+  Withdrawal2 = 27,
+  CreditPayments = 59,
+  MembershipFee = 67,
+  ServicesRefund = 71,
+  Services = 72,
+  Refund2 = 76
+}
