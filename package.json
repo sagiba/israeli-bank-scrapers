@@ -10,8 +10,8 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "clean": "rimraf lib",
-    "test": "cross-env BABEL_ENV=test jest",
-    "test:ci": "ncp src/tests/.tests-config.tpl.ts src/tests/.tests-config.ts && npm run test",
+    "test": "cross-env BABEL_ENV=test TZ=Asia/Jerusalem jest",
+    "test:ci": "ncp src/tests/.tests-config.tpl.ts src/tests/.tests-config.ts && cross-env TZ=Asia/Jerusalem npm run test",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
     "dev": "npm run type-check -- --watch",
