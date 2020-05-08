@@ -1,7 +1,9 @@
 /* eslint-disable class-methods-use-this */
 import moment from 'moment';
 import { VisaCalRawTransaction, VisaCalRawTransactionTransType } from './types';
-import { Transaction, TransactionStatuses, TransactionTypes } from '../../types';
+import {
+  CreditCardTransaction, Transaction, TransactionStatuses, TransactionTypes,
+} from '../../types';
 import {
   SHEKEL_CURRENCY_SYMBOL,
   SHEKEL_CURRENCY,
@@ -14,29 +16,33 @@ const DATE_FORMAT = 'DD/MM/YYYY';
 
 class VisaCalTransactionConverter {
   convertTransactions(txns: Array<VisaCalRawTransaction>): Array<Transaction> {
-    return txns.map((txn) => {
-      return {
-        type: this.convertTransactionType(txn.TransType),
-        date: moment(txn.Date, DATE_FORMAT).toISOString(),
-        processedDate: moment(txn.DebitDate, DATE_FORMAT).toISOString(),
-        originalAmount: -txn.Amount.Value,
-        originalCurrency: this.convertCurrency(txn.Amount.Symbol),
-        chargedAmount: -txn.DebitAmount.Value,
-        description: txn.MerchantDetails.Name,
-        memo: this.getTransactionMemo(txn),
-        installments: this.getInstallmentsInfo(txn),
-        status: TransactionStatuses.Completed,
-      };
-    });
+    return txns.map(this.convertTransaction.bind(this));
+  }
+
+  convertTransaction(txn: VisaCalRawTransaction): CreditCardTransaction {
+    return {
+      type: this.convertTransactionType(txn.TransType),
+      date: moment(txn.Date, DATE_FORMAT).toISOString(),
+      processedDate: moment(txn.DebitDate, DATE_FORMAT).toISOString(),
+      originalAmount: -txn.Amount.Value,
+      originalCurrency: this.convertCurrency(txn.Amount.Symbol),
+      chargedAmount: -txn.DebitAmount.Value,
+      description: txn.MerchantDetails.Name,
+      memo: this.getTransactionMemo(txn),
+      installments: this.getInstallmentsInfo(txn),
+      status: TransactionStatuses.Completed,
+    };
+  }
+
+  fixTxnType(txnType) {
+    if (typeof txnType === 'string') {
+      return parseInt(txnType, 10);
+    }
+    return txnType;
   }
 
   convertTransactionType(txnType: VisaCalRawTransactionTransType|string) {
-    if (typeof txnType === 'string') {
-      // eslint-disable-next-line no-param-reassign
-      txnType = parseInt(txnType, 10);
-    }
-
-    switch (txnType) {
+    switch (this.fixTxnType(txnType)) {
       case VisaCalRawTransactionTransType.Normal:
       case VisaCalRawTransactionTransType.Refund:
       case VisaCalRawTransactionTransType.Cancel:
@@ -79,7 +85,8 @@ class VisaCalTransactionConverter {
 
   getTransactionMemo(txn) {
     const { TransType: txnType, TransTypeDesc: txnTypeDescription } = txn;
-    switch (txnType) {
+
+    switch (this.fixTxnType(txnType)) {
       case VisaCalRawTransactionTransType.Normal:
         return txnTypeDescription === 'רכישה רגילה' ? '' : txnTypeDescription;
       case VisaCalRawTransactionTransType.Installments:

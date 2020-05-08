@@ -1,6 +1,6 @@
 export interface VisaCalRawTransaction {
   Id: string;
-  Numerator: number;
+  Numerator: string;
   Amount: VisaCalRawTransaction.Amount;
   AccumulatedAmount: VisaCalRawTransaction.Amount;
   Date: string;
@@ -11,9 +11,9 @@ export interface VisaCalRawTransaction {
   Comments: string;
   Notes: string;
   PayWaveInd: boolean;
-  CurrentPayment: number;
-  TotalPayments: number;
-  TransType: number;
+  CurrentPayment: string;
+  TotalPayments: string;
+  TransType: string;
   TransTypeDesc: string;
   TransSourceDesc: string;
   TransExecutionWay: number;
@@ -31,7 +31,7 @@ export declare namespace VisaCalRawTransaction {
     PhoneNumber: string;
     Address: string;
     Name: string;
-    Id: number;
+    Id: string;
     Type: string;
     SectorName: string;
     SectorCode: string;
