@@ -2,11 +2,11 @@ import _ from 'lodash';
 import buildUrl from 'build-url';
 import moment from 'moment';
 
-import { BaseScraper, ScrapeProgressTypes } from './base-scraper';
-import { fetchGet, fetchPost } from '../helpers/fetch';
-import { ErrorTypes } from '../types';
-import { VisaCalRawTransaction } from './visa-cal.types';
-import VisaCalTransactionConverter from './visa-cal.converter';
+import { BaseScraper, ScrapeProgressTypes } from '../base-scraper';
+import { fetchGet, fetchPost } from '../../helpers/fetch';
+import { ErrorTypes } from '../../types';
+import { VisaCalRawTransaction } from './types';
+import VisaCalTransactionConverter from './converter';
 
 const BASE_URL = 'https://cal4u.cal-online.co.il/Cal4U';
 const AUTH_URL = 'https://connect.cal-online.co.il/api/authentication/login';

@@ -1,14 +1,14 @@
 /* eslint-disable class-methods-use-this */
 import moment from 'moment';
-import { VisaCalRawTransaction, VisaCalRawTransactionTransType } from './visa-cal.types';
-import { Transaction, TransactionStatuses, TransactionTypes } from '../types';
+import { VisaCalRawTransaction, VisaCalRawTransactionTransType } from './types';
+import { Transaction, TransactionStatuses, TransactionTypes } from '../../types';
 import {
   SHEKEL_CURRENCY_SYMBOL,
   SHEKEL_CURRENCY,
   DOLLAR_CURRENCY_SYMBOL,
   DOLLAR_CURRENCY,
-} from '../constants';
-import { filterOldTransactions, fixInstallments, sortTransactionsByDate } from '../helpers/transactions';
+} from '../../constants';
+import { filterOldTransactions, fixInstallments, sortTransactionsByDate } from '../../helpers/transactions';
 
 const DATE_FORMAT = 'DD/MM/YYYY';
 
