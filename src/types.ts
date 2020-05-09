@@ -38,7 +38,7 @@ export enum TransactionStatuses {
 
 export interface Transaction {
   type: TransactionTypes;
-  identifier?: number;
+  identifier?: number|string;
   date: string;
   processedDate: string;
   originalAmount: number;
@@ -48,6 +48,8 @@ export interface Transaction {
   memo: string;
 
   status: TransactionStatuses;
+
+  raw?: any;
 }
 
 export interface CreditCardTransaction extends Transaction {
