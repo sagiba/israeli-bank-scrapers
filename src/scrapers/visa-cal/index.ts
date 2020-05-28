@@ -18,7 +18,7 @@ const NO_DATA_FOUND_MSG = 'לא נמצאו חיובים לטווח תאריכי�
 const HEADER_SITE = { 'X-Site-Id': '8D37DF16-5812-4ACD-BAE7-CD1A5BFA2206' };
 
 function getBankDebitsUrl(accountId) {
-  const toDate = moment().add(2, 'months');
+  const toDate = moment().add(3, 'months');
   const fromDate = moment().subtract(6, 'months');
 
   return buildUrl(BASE_URL, {
