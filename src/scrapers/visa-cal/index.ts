@@ -85,7 +85,8 @@ async function getTxnsOfCard(authHeader, card, bankDebits) {
 async function getTransactionsForAllAccounts(authHeader, startMoment, options) {
   const cardsByAccountUrl = `${BASE_URL}/CardsByAccounts`;
   const banksResponse = await fetchGet(cardsByAccountUrl, authHeader);
-  const txnConverter = new VisaCalTransactionConverter();
+
+  const txnConverter = options.converter || new VisaCalTransactionConverter();
 
   if (_.get(banksResponse, 'Response.Status.Succeeded')) {
     const accounts = [];
