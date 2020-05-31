@@ -110,6 +110,8 @@ function mapTransaction(rawTransaction) {
     memo: rawTransaction.comments,
     installments: getInstallmentsInfo(rawTransaction.comments),
     status,
+    identifier: rawTransaction.dealData.arn,
+    raw: rawTransaction,
   };
 }
 
