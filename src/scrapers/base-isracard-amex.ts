@@ -114,6 +114,7 @@ function convertTransactions(txns, processedDate) {
       memo: txn.moreInfo,
       installments: getInstallmentsInfo(txn),
       status: TransactionStatuses.Completed,
+      raw: txn,
     };
   });
 }
