@@ -197,11 +197,16 @@ class IsracardAmexBaseScraper extends BaseScraperWithBrowser {
   private servicesUrl: string;
 
   constructor(options, baseUrl, companyCode) {
-    super(options);
+    const servicesUrl = `${baseUrl}/services/ProxyRequestHandler.ashx`;
+    const clonedOptions = {
+      ...options,
+      servicesUrl,
+    };
+    super(clonedOptions);
 
     this.baseUrl = baseUrl;
     this.companyCode = companyCode;
-    this.servicesUrl = `${baseUrl}/services/ProxyRequestHandler.ashx`;
+    this.servicesUrl = servicesUrl;
   }
 
   async login(credentials): Promise<LegacyScrapingResult> {
